@@ -95,7 +95,7 @@ function initChart()
 	var height = parseFloat(getComputedStyle(chartArea).height);
 
     chartBoxFactor =4/5;
-     var chartBox = {
+    var chartBox = {
             width: width * chartBoxFactor,
             height: height * chartBoxFactor,
             x: width * (1-(chartBoxFactor))/2,
@@ -108,7 +108,7 @@ function initChart()
         strokeWidth: 0.01
     }));
 
-    //
+	//
     // just explicitly  calculate  dimensions
     // that could otherwise be spontaneously used inline
     //
@@ -132,6 +132,7 @@ function initChart()
     chartBox.heightScaler.domain([0, Math.max(series.series[0].max, series.series[1].max)]);
 
     var stage = new Kinetic.Stage({container: chartArea ,height: height, width: width});
+			
     var layer = new Kinetic.Layer();
 
     var circle = new Kinetic.Circle({
@@ -141,6 +142,30 @@ function initChart()
         strokeWidth: 0
     });
 
+	// init the background 
+	var backgroundLayer = new Kinetic.Layer();
+	
+	var fillHeight = 0;
+	var fillColorSalt = 1;
+	
+	var background = new Kinetic.Rect({
+	  x: 0,
+	  y: stage.getHeight() - fillHeight,
+	  width: stage.getWidth(),
+	  height: fillHeight,
+	  fill: "hsla(39, 100%, 50%, 1)",
+	  stroke: "hsla(39, 100%, 50%, 1)",
+	  strokeWidth: 1,
+	  offset: {
+		x: 0,
+		y: 0
+	  }
+	});
+
+	backgroundLayer.add(background);
+	stage.add(backgroundLayer);
+
+	var mouseMoves = 0;
     chartBoxRect.on('mousemove', function() {
         //
         // find datum closest to mouse position, out of all series.
@@ -155,7 +180,7 @@ function initChart()
         var pos = stage.getMousePosition();
         //console.log('x: ' + chartBox.widthScaler.invert(pos.x) + ', y: ' + chartBox.heightScaler.invert(pos.y));
 
-         function dist(x0, y0, x1, y1)  { return Math.sqrt(Math.pow(Math.abs(x0-x1),2) + Math.pow(Math.abs(y0-y1),2)); };
+        function dist(x0, y0, x1, y1)  { return Math.sqrt(Math.pow(Math.abs(x0-x1),2) + Math.pow(Math.abs(y0-y1),2)); };
 
         var minDistanceSerie = null;
         var minDistance = Infinity;
@@ -191,13 +216,46 @@ function initChart()
         dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' + series.series[minDistanceSerie].data[minDistanceElem].y.toString() + '</p>';
         dataDetail += '</div>';
         document.getElementById('dataDetail').innerHTML = dataDetail;
-       // center the text lines inside the containing box, just for now
+		// center the text lines inside the containing box, just for now
         document.getElementById('dataDetailInner').style.paddingTop = ($('#dataDetail').height()-$('#dataDetailInner').height())/2 + 'px';
 
-       layer.draw();
+		layer.draw();
+
+		mouseMoves += 1;
+			
+		if (mouseMoves > 10)
+		{
+			
+			//fillHeight += ((fillHeight+5)/stage.getHeight())*10
+			fillHeight += Math.sin((fillHeight+5)/stage.getHeight()*Math.PI)*2+1;
+			
+			/*
+			if (fillHeight >= stage.getHeight()/2)	   			
+				fillHeight += 3;
+			else
+				fillHeight += 1;
+			*/
+					
+			if (fillHeight > stage.getHeight())	   			
+				fillHeight = stage.getHeight();
+				
+			background.transitionTo({ 
+				y: stage.getHeight() - fillHeight,
+				height: fillHeight,
+				duration: 0.01,
+				easing: "ease-in"});
+
+			if (fillHeight >= stage.getHeight())
+			{
+				console.log('you won');
+			}
+		}
+			
+		//backgroundLayer.draw();
+	   
     });
 
-   /*
+    /*
     chartBoxRect.on("mouseover", function() {
         //chartRect.setFill("hsl(240,15%,93%)");
         this.setFill("black");
