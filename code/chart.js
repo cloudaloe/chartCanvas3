@@ -94,7 +94,7 @@ function initChart()
 	var width = parseFloat(getComputedStyle(chartArea).width);
 	var height = parseFloat(getComputedStyle(chartArea).height);
 
-    chartBoxFactor =4/5;
+    chartBoxFactor = 4/5;
     var chartBox = {
             width: width * chartBoxFactor,
             height: height * chartBoxFactor,
@@ -223,7 +223,7 @@ function initChart()
 
 		mouseMoves += 1;
 			
-		if (mouseMoves > 10)
+		if (mouseMoves > 17)
 		{
 			
 			//fillHeight += ((fillHeight+5)/stage.getHeight())*10
@@ -266,7 +266,7 @@ function initChart()
     });
 
     /*
-    chartBoxRect.on("mouseover", function() {
+	chartBoxRect.on("mouseover", function() {
         //chartRect.setFill("hsl(240,15%,93%)");
         this.setFill("black");
 		 layer.draw();
@@ -276,8 +276,8 @@ function initChart()
         this.setFill("hsl(240,20%,95%)");
         layer.draw();
     });
-    */
-
+	*/
+    
     // add the shape to the layer
 	layer.add(chartBoxRect);
 
