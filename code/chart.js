@@ -227,7 +227,7 @@ function initChart()
 		{
 			
 			//fillHeight += ((fillHeight+5)/stage.getHeight())*10
-			fillHeight += Math.sin((fillHeight+5)/stage.getHeight()*Math.PI)*2+1;
+			fillHeight += Math.sin((fillHeight)/stage.getHeight()*Math.PI)*2+1;
 			
 			/*
 			if (fillHeight >= stage.getHeight()/2)	   			
@@ -243,12 +243,22 @@ function initChart()
 				y: stage.getHeight() - fillHeight,
 				height: fillHeight,
 				duration: 0.01,
-				easing: "ease-in"});
-
-			if (fillHeight >= stage.getHeight())
-			{
-				console.log('you won');
-			}
+				easing: "ease-in",
+				callback: function(){
+					if (fillHeight >= stage.getHeight())
+					{
+						console.log('you won');
+					}
+					else
+					{
+						background.transitionTo({ 
+							y: stage.getHeight() - fillHeight+10,
+							height: fillHeight-10,
+							duration: 0.7,
+							easing: "ease-in"});
+					}
+				}
+			});
 		}
 			
 		//backgroundLayer.draw();
