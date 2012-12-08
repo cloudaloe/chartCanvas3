@@ -154,7 +154,7 @@ function initChart()
 	
 	var background = new Kinetic.Rect({
 	  x: 0,
-	  y: stage.getHeight() - fillHeight,
+	  y: stage.getHeight() - fillHeight + 1,
 	  width: stage.getWidth(),
 	  height: fillHeight,
 	  fill: "hsla(39, 100%, 50%, 1)",

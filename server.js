@@ -132,7 +132,7 @@ function requestHandler(request, response) {
         request.on('end', function() {
             var postObject = queryString.parse(data);
             //console.log('data', data);
-            console.log('received post data :' + postObject);
+            console.log('received post data :' + JSON.stringify(postObject));
             
 			/*
 			switch(postObject.version)
