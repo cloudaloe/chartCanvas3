@@ -83,8 +83,11 @@ function requestHandler(request, response) {
 	if (request.method == 'GET')
         //
         // a UI client page load
-        //  delegated to node-static for serving it
+        // delegated to node-static for serving it
         //
+		
+		console.log('UI Served to ' + request.connection.remoteAddress)
+		
 		staticContentServer.serve(request, response, function (err, res) {
             if (err) { 
                 console.error("Error serving " + staticPath + request.url + " - " + err.message);
