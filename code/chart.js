@@ -6,6 +6,9 @@ chart = new Object(); 		// container for chart properties
 timeframe = new Object();	// container for time frame properties
 //xAxisHeight=20;
 //yAxisWidth=40;
+var metrics = new Object();
+var chartEngagementStartTime = null;
+var gameOver = false;
 
 function seriesReady()
 {
@@ -176,6 +179,13 @@ function initChart()
         //  by making it appear thicker.
         //
 
+		if (!chartEngagementStartTime)
+		{
+			chartEngagementStartTime = new Date();
+			metrics["timeToEngage"] = (chartEngagementStartTime.getTime() - startTime.getTime())/1000;
+				console.log('time to first chart engagement was ' + metrics["timeToEngage"] + ' seconds');
+		}
+			
         layer.remove(circle);
         var pos = stage.getMousePosition();
         //console.log('x: ' + chartBox.widthScaler.invert(pos.x) + ', y: ' + chartBox.heightScaler.invert(pos.y));
@@ -221,49 +231,65 @@ function initChart()
 
 		layer.draw();
 
-		mouseMoves += 1;
-			
-		if (mouseMoves > 17)
+		//
+		// game effects...
+		//
+		
+		if (!gameOver)
 		{
-			
-			//fillHeight += ((fillHeight+5)/stage.getHeight())*10
-			fillHeight += Math.sin((fillHeight)/stage.getHeight()*Math.PI)*2+1;
-			
-			/*
-			if (fillHeight >= stage.getHeight()/2)	   			
-				fillHeight += 3;
-			else
-				fillHeight += 1;
-			*/
-					
-			if (fillHeight > stage.getHeight())	   			
-				fillHeight = stage.getHeight();
+			mouseMoves += 1;
 				
-			background.transitionTo({ 
-				y: stage.getHeight() - fillHeight,
-				height: fillHeight,
-				duration: 0.01,
-				easing: "ease-in",
-				callback: function(){
-					if (fillHeight >= stage.getHeight())
-					{
-						console.log('you won');
+			if (mouseMoves > 17)
+			{
+				
+				//fillHeight += ((fillHeight+5)/stage.getHeight())*10
+				fillHeight += Math.sin((fillHeight)/stage.getHeight()*Math.PI)*2+1;
+				
+				/*
+				if (fillHeight >= stage.getHeight()/2)	   			
+					fillHeight += 3;
+				else
+					fillHeight += 1;
+				*/
+						
+				if (fillHeight > stage.getHeight())	   			
+					fillHeight = stage.getHeight();
+					
+				background.transitionTo({ 
+					y: stage.getHeight() - fillHeight,
+					height: fillHeight,
+					duration: 0.01,
+					easing: "ease-in",
+					callback: function(){
+						if (fillHeight >= stage.getHeight())
+						{
+							gameOver = true;
+							metrics["mouseMoves"] = mouseMoves;
+							console.log('you won');
+							var endTime = new Date();
+							metrics["engagmentToCompletionTime"] = (endTime.getTime() - startTime.getTime())/1000;
+							console.log('time from chart engagement to completion was ' + metrics["engagmentToCompletionTime"] + ' seconds');
+							console.log(JSON.stringify(metrics));
+							//background.setFill('blue');
+							//background.sjaetStroke('blue');
+						}
+						else
+						{
+							// 'slowly' drop down a bit, after each movement,
+							// to provide incentive to keep going
+							background.transitionTo({ 
+								y: stage.getHeight() - fillHeight+10,
+								height: fillHeight-10,
+								duration: 0.7,
+								easing: "ease-in"});
+						}
 					}
-					else
-					{
-						background.transitionTo({ 
-							y: stage.getHeight() - fillHeight+10,
-							height: fillHeight-10,
-							duration: 0.7,
-							easing: "ease-in"});
-					}
-				}
-			});
+				});
+			}
+				
+			//backgroundLayer.draw();
 		}
-			
-		//backgroundLayer.draw();
-	   
-    });
+	});
 
     /*
 	chartBoxRect.on("mouseover", function() {
@@ -285,12 +311,14 @@ function initChart()
 	stage.add(layer);
     draw(layer, chartBox);
     document.getElementById('dataDetail').innerHTML = '<p color=#fff; align=center>position over the chart for details here</p>';
+	
+	var startTime = new Date();
 }
 
 	function initTimeframe()
-{
+	{
 	timeframe.min = Math.min(series.series[0].minDate, series.series[1].minDate);
 	timeframe.max = Math.max(series.series[0].maxDate, series.series[1].maxDate);
 	//console.log("timeframe:");
 	//console.dir(timeframe);
-}
+	}

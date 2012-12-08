@@ -1,7 +1,8 @@
 //
 // todo: handle server disconnects as per https://github.com/felixge/node-mysql#server-disconnects,
-//  https://github.com/felixge/node-mysql#error-handling,
-//  and try-catching
+// https://github.com/felixge/node-mysql#error-handling,
+// and try-catching
+//
 
 //
 // setup a listener and attach a content server to it
