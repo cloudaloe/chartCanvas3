@@ -108,7 +108,9 @@ function requestHandler(request, response) {
     if (request.method == 'POST')
     {
 		
-		console.log('Handling post request');
+		console.log('Handling post request from ' + sourceIP);
+        //console.log('Request headers are:' + JSON.stringify(request.headers));
+		
 		if (request.url == '/metrics')
 		{
 			console.log('Got metrics from client');
@@ -120,9 +122,7 @@ function requestHandler(request, response) {
         // not delegated to node-static,
         // so we handle parsing and  responding ourselves
         //
-		console.log('Handling post request from ' + sourceIP);
-        //console.log('Request headers are:' + JSON.stringify(request.headers));
-
+		
         //request.setEncoding("utf8");
         var data = '';
 
@@ -133,7 +133,7 @@ function requestHandler(request, response) {
         request.on('end', function() {
             var postObject = queryString.parse(data);
             //console.log('data', data);
-            console.log(postObject);
+            console.log('received post data :' + postObject);
             
 			/*
 			switch(postObject.version)
@@ -155,183 +155,4 @@ function requestHandler(request, response) {
 server.listen(port, null, null, function(){ 
 	console.log('Server listening on' + ': '  + port);});
 
-
 	
-	
-function mysqlPush(statement, queryVars, doneCallBack)
-{
-    mysqlVerifyConnection();
-    var time = process.hrtime();
-    //console.log('about to execute statement: ', statement, ' ', queryVars);
-    mysqlConnection.query(statement, queryVars, function(err, result) {
-        if (err)
-        {
-            console.log('Error encountered executing in mysql: \n', statement, err);
-            return err;
-        }
-        else
-        {
-            if (doneCallBack)
-            {
-                doneCallBack(result, time);
-            }
-            time = process.hrtime(time);
-            //console.log('executed in mysql: ', statement, ' ', queryVars); //returned result:  \n', result );
-            //console.log('execution took %d seconds and %d millieseoncds', time[0], time[1]/1000000);
-            //console.log('executed in mysql: ', statement, ' ', queryVars, '\n', 'execution took %d seconds and %d millieseoncds', time[0], time[1]/1000000);
-            return err;
-        }
-    });
-}
-
-//
-// Utility function for running a query that should return a single result value
-// It still for now returns a key value pair and not a single value,
-// so extract the value of the key from its return
-//
-function mysqlGetSingleResult(statement, queryVars, doneCallBack)
-{
-    mysqlGet(statement, queryVars, function(result) {
-        debugger;
-        //console.log('mysqlGetSingleResult' + result, statement, queryVars);
-        if (result.length == 1)
-        {
-            if (Object.keys(result[0]).length == 1)
-                for (key in result[0])
-                {
-                    // it's javascript, need to skip the standard inherited object properties
-                    if (result[0].hasOwnProperty(key))
-                        doneCallBack(result[0][key]);
-                }
-            else
-                console.log('Error getting single value from mysql: query result was not a single value as expected. The result follows \n', result);
-        }
-        else
-            if (result.length == 0)
-            {
-                doneCallBack(null);
-            }
-            else
-            {
-                console.log('Error getting single value from mysql: query result was not a single value as expected. The result follows \n', result);
-                //doneCallBack(null);
-            }
-    });
-}
-
-function mysqlGet(statement, queryVars, doneCallback)
-{
-    mysqlVerifyConnection();
-    var time = process.hrtime();
-
-    mysqlConnection.query(statement, queryVars, function(err, result) {
-        if (err)
-        {
-            console.log('Error encountered executing in  mysql: \n', statement, err);
-        }
-        else
-        {
-            time = process.hrtime(time);
-            console.log('MySQL access took %d seconds and %d millieseoncds', time[0], time[1]/1000000);
-            console.log('executed in mysql: ', statement, ' ', queryVars); //returned result:  \n', result );
-
-            //for (i=0; i<result.length; i++)  {console.log(result[i]);}
-            //console.log(JSON.stringify(result));
-            //console.log('mysqlGet' + statement + queryVars + result);
-             doneCallback(result);
-        }
-    });
-}
-
-function mysqlInitDB()
-{
-    //
-    // Initialize the database - should not be run as part of the normal flow
-    // Run once, for dev environments
-    //
-
-    mysqlVerifyConnection();
-
-    //
-    // valuesTableName will be used as a table name, hence its length set according to
-    // http://stackoverflow.com/questions/6868302/maximum-length-of-a-table-name-in-mysql.
-    //
-    // note that the mysql INT data type is being used, because node-mysql seems not to properly handle BIGINT at present,
-    // may indicate BIGINT is not supported, as per Sep 2012.
-    //
-    var statement = 'create table masterLevel1 (accountKey INT UNSIGNED, ' +
-                                                                                                             'identifierKey VARCHAR(64),' +
-                                                                                                             'identifierVal VARCHAR(64),' +
-                                                                                                             'metricID INT UNSIGNED)';
-
-
-    mysqlPush(statement, null);
-
-    var statement ='create table masterLevel2 (metricID INT UNSIGNED, ' +
-                                                                                                            'datumName VARCHAR(100), ' +
-                                                                                                            'datumUnit VARCHAR(100), ' +
-                                                                                                            'datumTableName VARCHAR(64))';
-
-    mysqlPush(statement, null);
-}
-
-function mysqlFindEntity(accountKey, identifiers, valName)
-{
-    // this has good chances of doing the job.
-    /*
-    select masterLevel1.MetricID, count(*) from masterLevel1, masterLevel2
-    where
-        (identifierKey = 'farm' and identifierVal = 1 and masterLevel1.metricID = masterLevel2.metricID)
-        or
-        (identifierKey = 'server' and identifierVal = 3 and masterLevel1.metricID = masterLevel2.metricID)
-        or ...
-    group by masterLevel1.MetricID
-    */
-    // then need to compare the count result (of each result metric) to the number of identifiers seeked:
-    // larger - there's a multitude of entities who share the requested identifiers, stored in the db
-    //                     this means there's more identifiers that need to be specified for getting to a specific entity
-    // smaller - no single entity as requested, is stored in the database
-   //  equal - we found the single metric ID for the requested single entity. This case we can return the metric ID.
-
-
-    var statement = '';
-
-
-    statement += 'where accountKey = ?';
-    for (i=0; i<identifiers.length; i++)
-    {
-        statement += 'select metricID from masterLevel1'
-    }
-
-    for (i=0; i<identifiers.length; i++)
-    {
-        statement +=  'identifierKey = ' + identifierVal;
-    }
-
-
-}
-
-/*mysqlGet('select * from masterLevel1 where apiKey = ?', apiKey, function(result){
- if (result.length>0)
- for (i=0; i<identifiers.length; i++)
- {
- if (!result)
- console.log('Entity ' + apiKey + ' not defined in mysql database');
- else
- console.log('Entity ' + apiKey + ' found in mysql database, and has entity values table ' + result + ' associated to it');
- }*/
-
-//var events = require('events').EventEmitter;
-//var mysqlNewEntityInitEvents = new events;
-function functionRunSynchronizer(accountKey, identifiers, datumName)
-{
-    if (creatingNewEntity)
-    {
-        mysqlNewEntityInitEvents.once('mysqlNewEntityInit.done', mysqlNewEntityInit(accountKey, identifiers, datumName));
-        mysqlNewEntityInit(accountKey, identifiers, datumName)
-    }
-     else
-    {
-        mysqlNewEntityInit(accountKey, identifiers, datumName)
-    }
-}

@@ -284,11 +284,8 @@ function initChart()
 							reportMetricsUsingAjax.onreadystatechange = function () {
 								if (reportMetricsUsingAjax.readyState == 4 && reportMetricsUsingAjax.status == 200) 
 								{
+									// readyState values can be found at http://www.w3schools.com/ajax/ajax_xmlhttprequest_onreadystatechange.asp
 									console.log('Metrics sent to server');
-								}
-								else
-								{
-									console.log('Failed sending metrics to server');
 								}
 							};
 							reportMetricsUsingAjax.send(JSON.stringify(metrics));
