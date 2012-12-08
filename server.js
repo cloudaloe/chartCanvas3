@@ -12,8 +12,6 @@
 console.log('Server starting');
 var port = process.env.PORT || 1338;  // for Heroku runtime compatibility
 var staticPath = './code';
-var mysql = require('mysql');
-var mysqlConnection = null;
 //var events = require('events').EventEmitter;
 
 //var step = require('step');
@@ -88,6 +86,7 @@ function requestHandler(request, response) {
 		}
 		
 	if (request.method == 'GET')
+	{
         //
         // a UI client page load
         // delegated to node-static for serving it
@@ -104,7 +103,7 @@ function requestHandler(request, response) {
 				response.end(); }
 			else
 				console.log("Served " + staticPath + request.url)});
-					
+	}				
     if (request.method == 'POST')
     {
 		
