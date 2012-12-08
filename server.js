@@ -80,6 +80,13 @@ function requestHandler(request, response) {
         }
     }
 
+	var sourceIP = request.headers['x-forwarded-for'];
+		if (!sourceIP)
+		{
+			sourceIP = request.connection.remoteAddress
+			//console.log(JSON.stringify(request.headers));	
+		}
+		
 	if (request.method == 'GET')
         //
         // a UI client page load
@@ -88,31 +95,32 @@ function requestHandler(request, response) {
 		
 		//console.log('UI Served to ' + request.connection.remoteAddress) // This is just the proxy address. In a hosted environment (e.g. Heroku) it just returns the hosting service proxy address, which varies as there is typically proxy load balancing.
 		
-		var sourceIP = request.headers['x-forwarded-for'];
-		if (!sourceIP)
-		{
-			sourceIP = request.connection.remoteAddress
-			//console.log(JSON.stringify(request.headers));	
-		}
 		console.log('UI Served to ' + sourceIP);
-				
+	
 		staticContentServer.serve(request, response, function (err, res) {
-            if (err) { 
-                console.error("Error serving " + staticPath + request.url + " - " + err.message);
-                response.writeHead(err.status, err.headers);
-                response.end(); }
+			if (err) { 
+				console.error("Error serving " + staticPath + request.url + " - " + err.message);
+				response.writeHead(err.status, err.headers);
+				response.end(); }
 			else
-                console.log("Served " + staticPath + request.url)});
-
+				console.log("Served " + staticPath + request.url)});
+					
     if (request.method == 'POST')
     {
+		
+		console.log('Handling post request');
+		if (request.url == '/metrics')
+		{
+			console.log('Got metrics from client');
+			response.writeHead(200, null);
+            response.end();			
+		}
         //
         // handle uploading new data
         // not delegated to node-static,
         // so we handle parsing and  responding ourselves
         //
-        console.log('Handling post request from client ' + request.connection.remoteAddress +
-            ' (port ' + request.connection.remotePort +')');
+		console.log('Handling post request from ' + sourceIP);
         //console.log('Request headers are:' + JSON.stringify(request.headers));
 
         //request.setEncoding("utf8");
@@ -126,7 +134,9 @@ function requestHandler(request, response) {
             var postObject = queryString.parse(data);
             //console.log('data', data);
             console.log(postObject);
-            switch(postObject.version)
+            
+			/*
+			switch(postObject.version)
             {
                 case undefined:
                     apiError('an  API version is not specified in the client request');
@@ -137,6 +147,7 @@ function requestHandler(request, response) {
                 default:
                     apiError('the API version specified by the client request is not supported');
             }
+			*/
         });
     }
 }
@@ -144,6 +155,9 @@ function requestHandler(request, response) {
 server.listen(port, null, null, function(){ 
 	console.log('Server listening on' + ': '  + port);});
 
+
+	
+	
 function mysqlPush(statement, queryVars, doneCallBack)
 {
     mysqlVerifyConnection();
@@ -321,196 +335,3 @@ function functionRunSynchronizer(accountKey, identifiers, datumName)
         mysqlNewEntityInit(accountKey, identifiers, datumName)
     }
 }
-
-/*
-//  frozen attempt to make a modular 'syncrhonize calls to a given function'
-var serializer = new Object;
-function serialize(funcName)
-{
-    if (!serializer[funcName])
-    {
-        serializer[funcName]=new Object();
-        serializer[funcName].stack = new Array();
-    }
-}
-var mysqlNewEntityInitSynchronizer = new serializer(mysqlNewEntityInit);
-*/
-
-
-stack = new Array(); // this is a global
-function mysqlNewEntityInitSynchronizer()
-{
-    arguments = Array.prototype.slice.call(arguments);
-    stack.push(arguments); // queue the arguments as an array
-    if (stack.length == 1)
-    {
-        arguments.push(callDone);
-        mysqlNewEntityInit.apply(mysqlNewEntityInit, arguments); // invoke the target function
-    }
-
-    function callDone()
-    {
-        stack.shift();
-        if (stack.length > 0)
-        {
-            // invoke the target function with the queued arguments plus the callback
-            var arguments = stack.shift();
-            arguments.push(callDone)
-            mysqlNewEntityInit.apply(mysqlNewEntityInit, arguments);
-        }
-    }
-}
-
-function mysqlNewEntityInit(accountKey, identifiers, datumName, doneCallBack)
-{
-    console.log(arguments.callee.name + ' starting');
-    //var queryCompletionTracker = new events;
-    //function queryCompletionTracker.on('done', function(where) {
-    var count = 0;
-    var time2 = process.hrtime();
-    function queryCompletionTracker(where)
-    {
-        time2 = process.hrtime(time2);
-        console.log('query completion %d took %d seconds and %d millieseoncds', count, time2[0], time2[1]/1000000);
-        time2 = process.hrtime();
-
-        console.log(count);
-        count += 1;
-        //console.log('done event hit for ' + where );
-        //console.log('count is now' + count);
-        if (count == 2 + identifiers.length)
-        {
-            time = process.hrtime(time);
-            console.log('Creating new entity (not including commit) took %d seconds and %d millieseoncds', time[0], time[1]/1000000);
-            var time4 = process.hrtime();
-            mysqlPush('COMMIT', null,  function() {
-                time4 = process.hrtime(time4);
-                console.log('committing took %d seconds and %d millieseoncds', time4[0], time4[1]/1000000);
-
-                doneCallBack();
-            });
-            console.log('committed');
-        }
-    }
-
-    var time = process.hrtime();
-
-
-    var time3 = process.hrtime();
-    mysqlPush('START TRANSACTION', null, function(){
-        time3 = process.hrtime(time3);
-        console.log('starting the transaction took %d seconds and %d millieseoncds', time3[0], time3[1]/1000000);
-        mysqlGetSingleResult('select max(metricID) from masterLevel2', null, function(metricID) {
-            //
-            //  first, get a unique ID to use for the new table
-            // this ID determines the name of the table in which
-            // the datums of the entity will be stored
-            //
-            //console.log(metricID);
-            if (!metricID) // master table still empty
-                metricID = 1;
-             else
-                metricID += 1;
-
-            metricValuesTableName = 'dv' + metricID.toString();
-            console.log('created new metric with metric id ', metricID);
-
-            // create a table for the metric values
-            mysqlPush('create table ' + metricValuesTableName + ' (timestamp TIMESTAMP, value float)', null, queryCompletionTracker ('create'));
-
-            // create entries in the master tables
-            for (i=0; i<identifiers.length; i++)
-            {
-                //console.log('before level 1 insert');
-                mysqlPush('insert into masterLevel1 SET ?', {
-                    accountKey: 'accountKey',
-                    identifierKey: identifiers[i].key,
-                    identifierVal: identifiers[i].val,
-                    metricID:metricID
-                },
-                 null,
-                queryCompletionTracker('insert level 1'));
-            }
-
-            mysqlPush('insert into masterLevel2 SET ?', {
-                metricID:metricID,
-                datumName: datumName,
-                datumName: datumName,
-                datumUnit:'percent',
-                datumTableName: metricValuesTableName
-            },
-             null,
-            queryCompletionTracker('insert level 2'));
-        });
-    });
-}
-
-function mysqlVerifyConnection()
-{
-    if (!mysqlConnection)
-    {
-         mysqlConnection = mysql.createConnection({
-            debug   : false,
-            host     : 'instance22681.db.xeround.com',
-            port    : '14944',
-            user     : 'cloudaloe',
-            password : 'cloudaloe',
-            database: 'hack'
-         });
-         mysqlConnection.connect(function(err){
-            if (err)
-            {
-                console.log('Failed connecting to mysql \n', err);
-            }
-            else
-                console.log('Connected to mysql');
-        });
-        //mysqlQ(mysqlConnection, false);
-    }
-}
-
-function stupidTestMysqlDB()
-{
-    //var statement = 'SELECT * from table1';
-    var statement = 'insert into table1 SET ?';
-    //var statement = 'create table data (timestamp TIMESTAMP, value float)'
-
-    var values  = {id: 5, name: 555};
-
-    mysqlVerifyConnection();
-
-    mysqlConnection.query(statement, values, function(err, result, fields) {
-        //console.log(statement, values, rows.length, err);
-        if (err) throw err;
-        for (i=0; i<result.length; i++)
-        {
-            console.log(result[i]);
-        }
-    });
-    mysqlConnection.end();
-}
-
-//mysqlInitDB();
-//stupidTestMysqlDB();
-//mysqlGetSingleResult('select max(metricID) from master', function(result) {console.log(result);});
-//if (mysqlFindEntity(738229833, null))
-//    console.log(found);
-
-/*mysqlNewEntityInitSynchronizer('555555',
-    [{key: 'datacenter', val:'DCAA'},
-        {key: 'server', val:'server1'}],
-    'load');
-mysqlNewEntityInitSynchronizer('555555',
-    [{key: 'datacenter', val:'DCAA'},
-        {key: 'server', val:'server2'}],
-    'load');/*
-/*mysqlNewEntityInit('555555',
-    [{key: 'datacenter', val:'DCBB'},
-        {key: 'server', val:'server7'}],
-    'load');
-mysqlNewEntityInit('555555',
-    [{key: 'datacenter', val:'datacBB'},
-        {key: 'server', val:'server2'}],
-    'load');
-*/
-// TODO: handle table name counter overflow

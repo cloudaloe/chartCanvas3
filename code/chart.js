@@ -9,6 +9,7 @@ timeframe = new Object();	// container for time frame properties
 var metrics = new Object();
 var chartEngagementStartTime = null;
 var gameOver = false;
+var reportMetricsUsingAjax = new XMLHttpRequest();
 
 function seriesReady()
 {
@@ -264,14 +265,33 @@ function initChart()
 						if (fillHeight >= stage.getHeight())
 						{
 							gameOver = true;
+							//background.setFill('blue');
+							//background.sjaetStroke('blue');
+														
 							metrics["mouseMoves"] = mouseMoves;
 							console.log('you won');
 							var endTime = new Date();
 							metrics["engagmentToCompletionTime"] = (endTime.getTime() - startTime.getTime())/1000;
 							console.log('time from chart engagement to completion was ' + metrics["engagmentToCompletionTime"] + ' seconds');
+
+							//
+							// Report metrics to server
+							//
 							console.log(JSON.stringify(metrics));
-							//background.setFill('blue');
-							//background.sjaetStroke('blue');
+							//reportMetricsUsingAjax.open('POST', window.location.protocol + '//' + window.location.host + '/metrics');
+							reportMetricsUsingAjax.open('POST', '/metrics');
+							reportMetricsUsingAjax.setRequestHeader('Content-Type', 'application/json');
+							reportMetricsUsingAjax.onreadystatechange = function () {
+								if (reportMetricsUsingAjax.readyState == 4 && reportMetricsUsingAjax.status == 200) 
+								{
+									console.log('Metrics sent to server');
+								}
+								else
+								{
+									console.log('Failed sending metrics to server');
+								}
+							};
+							reportMetricsUsingAjax.send(JSON.stringify(metrics));
 						}
 						else
 						{
