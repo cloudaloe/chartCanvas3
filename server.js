@@ -86,8 +86,13 @@ function requestHandler(request, response) {
         // delegated to node-static for serving it
         //
 		
-		console.log('UI Served to ' + request.connection.remoteAddress)
-		
+		//console.log('UI Served to ' + request.connection.remoteAddress) // This is just the proxy address. In a hosted environment (e.g. Heroku) it just returns the hosting service proxy address, which varies as there is typically proxy load balancing.
+		//console.log('UI Served to ' + JSON.stringify(request.headers));
+		var sourceIP = request.headers['X-Forwarded-For'];
+		if (!sourceIP)
+			sourceIP = request.connection.remoteAddress
+		console.log('UI Served to ' + sourceIP);
+				
 		staticContentServer.serve(request, response, function (err, res) {
             if (err) { 
                 console.error("Error serving " + staticPath + request.url + " - " + err.message);
