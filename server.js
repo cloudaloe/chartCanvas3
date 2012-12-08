@@ -88,11 +88,11 @@ function requestHandler(request, response) {
 		
 		//console.log('UI Served to ' + request.connection.remoteAddress) // This is just the proxy address. In a hosted environment (e.g. Heroku) it just returns the hosting service proxy address, which varies as there is typically proxy load balancing.
 		
-		var sourceIP = request.headers['X-Forwarded-For'];
+		var sourceIP = request.headers['x-forwarded-for'];
 		if (!sourceIP)
 		{
 			sourceIP = request.connection.remoteAddress
-			console.log(JSON.stringify(request.headers));	
+			//console.log(JSON.stringify(request.headers));	
 		}
 		console.log('UI Served to ' + sourceIP);
 				
