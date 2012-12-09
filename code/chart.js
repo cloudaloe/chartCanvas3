@@ -311,7 +311,7 @@ function initChart()
 							metrics["engagmentToCompletionTime"] = (endTime.getTime() - startTime.getTime())/1000;
 							console.log('time from chart engagement to completion was ' + metrics["engagmentToCompletionTime"] + ' seconds');
 							
-							var score = Math.pow((7 / metrics["engagmentToCompletionTime"]),2) * 1000;
+							var score = Math.pow((10 / metrics["engagmentToCompletionTime"]),2) * 1000;
 							
 							showDataDetail = false; // from now, the data detail box will not be used for data, but for feedback.
 
