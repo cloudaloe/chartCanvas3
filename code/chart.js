@@ -228,7 +228,7 @@ function initChart()
 			//
 			var dataDetail = '<div id=dataDetailInner>';
 			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' +  series.series[minDistanceSerie].data[minDistanceElem].x.toString() + '</p>';
-			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' + series.series[minDistanceSerie].data[minDistanceElem].y.toString() + '</p>';
+			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em; font-weight:bold">' + parseInt(series.series[minDistanceSerie].data[minDistanceElem].y) + '</p>';
 			dataDetail += '</div>';
 			// center the text lines inside the containing box, just for now
 			document.getElementById('dataDetail').innerHTML = dataDetail;
@@ -277,7 +277,7 @@ function initChart()
 					
 			mouseMoves += 1;
 				
-			if (mouseMoves > 17)
+			if (mouseMoves > 20)
 			{
 				
 				//fillHeight += ((fillHeight+5)/stage.getHeight())*10
