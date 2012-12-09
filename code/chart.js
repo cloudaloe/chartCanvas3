@@ -230,8 +230,8 @@ function initChart()
 			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' +  series.series[minDistanceSerie].data[minDistanceElem].x.toString() + '</p>';
 			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' + series.series[minDistanceSerie].data[minDistanceElem].y.toString() + '</p>';
 			dataDetail += '</div>';
-			document.getElementById('dataDetail').innerHTML = dataDetail;
 			// center the text lines inside the containing box, just for now
+			document.getElementById('dataDetail').innerHTML = dataDetail;
 			document.getElementById('dataDetailInner').style.paddingTop = ($('#dataDetail').height()-$('#dataDetailInner').height())/2 + 'px';
 		}
 
@@ -305,19 +305,26 @@ function initChart()
 							//background.setFill('blue');
 							//background.sjaetStroke('blue');
 							
-							showDataDetail = false; // from now, the data detail box will not be used for data, but for feedback.
-							document.getElementById('dataDetail').innerHTML = '<p style="color:#EEE; font-weight:bold; font-size:13.5"; align=center>You Won!</p>';			
-							var feedbackBox = d3.select("#dataDetail");							
-							feedbackBox.transition().style("background-color","hsla(37, 100%, 50%, 1)").duration(1000).ease("linear");	
-														
-							metrics["mouseMoves"] = mouseMoves;
+														metrics["mouseMoves"] = mouseMoves;
 							console.log('you won');
 							var endTime = new Date();
 							metrics["engagmentToCompletionTime"] = (endTime.getTime() - startTime.getTime())/1000;
 							console.log('time from chart engagement to completion was ' + metrics["engagmentToCompletionTime"] + ' seconds');
 							
-							var Score = Math.pow((15 / metrics["engagmentToCompletionTime"]),2) * 1000;
+							var score = Math.pow((7 / metrics["engagmentToCompletionTime"]),2) * 1000;
+							
+							showDataDetail = false; // from now, the data detail box will not be used for data, but for feedback.
 
+							var dataDetail = '<div id=dataDetailInner>';
+							dataDetail += '<p style="color:#EEE; font-weight:bold; font-size:13.5; margin-top:0em; margin-bottom:0em"; align=center>You Won!</p><table style="color:#EEE; font-size:13.5; margin-top:0em; margin-bottom:0em" align=center><tr><td>your score is </td><td style="font-style:italic">' + Math.floor(score) + ' </td><td>out of 1000</td></tr></table>';
+							dataDetail += '</div>';
+
+							document.getElementById('dataDetail').innerHTML = dataDetail;
+							document.getElementById('dataDetailInner').style.paddingTop = ($('#dataDetail').height()-$('#dataDetailInner').height())/2 + 'px';
+		
+							var feedbackBox = d3.select("#dataDetail");							
+							feedbackBox.transition().style("background-color","hsla(37, 100%, 50%, 1)").duration(1000).ease("linear");	
+							
 							//
 							// Report metrics to server
 							//
