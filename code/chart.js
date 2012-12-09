@@ -10,6 +10,8 @@ var metrics = new Object();
 var chartEngagementStartTime = null;
 var gameOver = false;
 var reportMetricsUsingAjax = new XMLHttpRequest();
+var showDataDetail = true;
+var progressStage = 'notInitiated'
 
 function seriesReady()
 {
@@ -218,17 +220,20 @@ function initChart()
 
         //plot(layer, chartBox, series.series[minDistanceSerie].data, 'highlighted');
 
-        //
-        // show datum details in a bottom box.
-        // by adding it as html there
-        //
-        var dataDetail = '<div id=dataDetailInner>';
-        dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' +  series.series[minDistanceSerie].data[minDistanceElem].x.toString() + '</p>';
-        dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' + series.series[minDistanceSerie].data[minDistanceElem].y.toString() + '</p>';
-        dataDetail += '</div>';
-        document.getElementById('dataDetail').innerHTML = dataDetail;
-		// center the text lines inside the containing box, just for now
-        document.getElementById('dataDetailInner').style.paddingTop = ($('#dataDetail').height()-$('#dataDetailInner').height())/2 + 'px';
+		if (showDataDetail)
+		{
+			//
+			// show datum details in a bottom box.
+			// by adding it as html there
+			//
+			var dataDetail = '<div id=dataDetailInner>';
+			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' +  series.series[minDistanceSerie].data[minDistanceElem].x.toString() + '</p>';
+			dataDetail += '<p align=center style="margin-top:0em; margin-bottom:0em">' + series.series[minDistanceSerie].data[minDistanceElem].y.toString() + '</p>';
+			dataDetail += '</div>';
+			document.getElementById('dataDetail').innerHTML = dataDetail;
+			// center the text lines inside the containing box, just for now
+			document.getElementById('dataDetailInner').style.paddingTop = ($('#dataDetail').height()-$('#dataDetailInner').height())/2 + 'px';
+		}
 
 		layer.draw();
 
@@ -238,6 +243,38 @@ function initChart()
 		
 		if (!gameOver)
 		{
+			
+			//
+			// Adjust the humble feedback box per progress
+			//
+			var progress = fillHeight/stage.getHeight();
+			if (progress>0.25)
+			{
+				if (progressStage != '0.25')
+				{
+					showDataDetail = false; // from now, the data detail box will not be used for data, but for feedback.
+					document.getElementById('dataDetail').innerHTML = '<p style="color:#EEE; font-weight:bold; font-size:13.5"; align=center>Way to Go! Keep Going!</p>';			
+					var feedbackBox = d3.select("#dataDetail");							
+					feedbackBox.transition().style("background-color","orange").duration(100).ease("linear");		
+				}
+				progressStage = '0.25';
+			}
+			if (progress>0.85)
+			{
+				if (progressStage != '0.85')
+				{
+					showDataDetail = false; // from now, the data detail box will not be used for data, but for feedback.
+					document.getElementById('dataDetail').innerHTML = '<p style="color:#EEE; font-weight:bold; font-size:13.5"; align=center>Just A Bit More!</p>';			
+					var feedbackBox = d3.select("#dataDetail");							
+					feedbackBox.transition().style("background-color","orange").duration(100).ease("linear");		
+				}
+				progressStage = '0.85';
+			}
+			//feedbackBox.style("color","orange");
+			//feedbackBox.style("display", "inherit");
+			//feedbackBox.transition().style("margin-top", "10%").duration(1).ease("cubic-in-out");
+			
+					
 			mouseMoves += 1;
 				
 			if (mouseMoves > 17)
@@ -267,12 +304,19 @@ function initChart()
 							gameOver = true;
 							//background.setFill('blue');
 							//background.sjaetStroke('blue');
+							
+							showDataDetail = false; // from now, the data detail box will not be used for data, but for feedback.
+							document.getElementById('dataDetail').innerHTML = '<p style="color:#EEE; font-weight:bold; font-size:13.5"; align=center>You Won!</p>';			
+							var feedbackBox = d3.select("#dataDetail");							
+							feedbackBox.transition().style("background-color","hsla(37, 100%, 50%, 1)").duration(1000).ease("linear");	
 														
 							metrics["mouseMoves"] = mouseMoves;
 							console.log('you won');
 							var endTime = new Date();
 							metrics["engagmentToCompletionTime"] = (endTime.getTime() - startTime.getTime())/1000;
 							console.log('time from chart engagement to completion was ' + metrics["engagmentToCompletionTime"] + ' seconds');
+							
+							var Score = Math.pow((15 / metrics["engagmentToCompletionTime"]),2) * 1000;
 
 							//
 							// Report metrics to server
